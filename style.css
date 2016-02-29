@@ -1,0 +1,42 @@
+.login{ 
+	/*margin-top: .1em;*/
+	float: right;}
+.search{ 
+	/*margin-top: .1em;*/
+	/*float: left;*/
+}
+
+.login form {
+    display: inline-block; 
+}
+.t {
+    margin-left: 40%;
+    margin-bottom: 5em;
+    margin-top: 3em;
+}
+
+.tag form{
+display: inline-block; 
+margin-left: 7.8% ;
+}
+.story
+{	margin-bottom: 2em; 
+    border-bottom: 1px solid #ddd;
+    padding-left: 50%;
+}
+.story form
+{	display: inline-block; 
+}
+.cmtf{
+	 margin-left: 40%;
+}
+#story
+{	margin-bottom: 2em; 
+    border-bottom: 1px solid #ddd;
+    padding-left: 50%;
+}
+#story form
+{	
+
+	display: inline-block; 
+}
