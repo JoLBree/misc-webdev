@@ -1,0 +1,48 @@
+<?php 
+require 'database.php';
+
+if(!isset($_POST['species']) !|| isset($_POST['name']) ||! isset($_POST['weight']) || isse!t($_POST['description']) || !isset($_FILES['picture']) ||){
+	echo "Error: not all form variables received";
+	exit;
+}
+
+$species = $_POST['species'];
+$name = $_POST['name'];
+$weight = (float)$_POST['weight'];
+$description = $_POST['description'];
+$picture = basename($_FILES['picture']['name']);
+if( !preg_match('/^[\w_\.\-]+$/', $picture) ){
+	echo "Invalid filename";
+	exit;
+}
+
+
+$stmt = $mysqli->prepare("
+	INSERT INTO pets (species, name, weight, description, filename)
+	VALUES (?,?,?,?,?)");
+if(!$stmt){
+	printf("Query Prep Failed: %s\n", $mysqli->error);
+	exit;
+}
+$stmt->bind_param('s,s,d,s,s', $species, $name , $weight , $description , $picture);
+$stmt->execute();
+
+// check if query failed.
+
+$stmt->close();
+
+// assuming query successful
+
+$full_path = sprintf("/pictures/%s", $username, $picture);
+
+if( move_uploaded_file($_FILES['picture']['tmp_name'], $full_path) ){
+		header("Location: pet-listings.php");
+		exit;
+	}else{
+		echo "transfer failed";
+		exit;
+	}
+
+
+
+	?>

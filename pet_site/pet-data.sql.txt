@@ -1,0 +1,28 @@
+ICA SQL statements
+Josephine Lee 430706
+
+create database petdb;
+use petdb;
+
+CREATE TABLE pets (
+	id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	species ENUM('cat','dog','fish','bird','hamster') NOT NULL,
+	name VARCHAR(50) NOT NULL,
+	filename VARCHAR(150) NOT NULL,
+	weight DECIMAL(4,2) NOT NULL,
+	description TINYTEXT,
+	PRIMARY KEY (id)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+INSERT INTO pets (species, name, weight, description, filename)
+VALUES (?,?,?,?,?);
+
+SELECT
+	COUNT(id),
+	species
+FROM pets
+GROUP BY species;
+
+SELECT
+	species, name, weight, description, picture
+FROM pets
