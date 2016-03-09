@@ -1,0 +1,23 @@
+body {
+	padding-top: 50px;
+	padding: 40px 15px;
+	text-align: center;
+}
+
+.btn-group{
+	margin: 0px 5px;
+}
+
+.caret{
+	margin: 0px 1px;
+}
+
+table {
+	padding: 0px 10px;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
+section{
+	padding: 0px 5%;
+}

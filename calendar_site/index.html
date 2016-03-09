@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>Calendar</title>
+  <!-- Bootstrap -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/calendar-style.css" rel="stylesheet">
+
+</head>
+<body>
+  <h1>Calendar</h1>
+  <section>
+    <div class="btn-group">
+      <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="selected-option year">Select Year</span> <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu year-dropdown">
+        <!-- Javascript populates years here -->
+      </ul>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="selected-option month">Select Month</span> <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu month-dropdown">
+        <!-- Javascript populates months here -->
+      </ul>
+    </div>
+  </section>
+  <section>
+    <div>
+      <table class = "calendar-table table">
+        <!-- Javascript populates table here -->
+      </table>
+
+    </div>
+  </section>
+
+
+
+
+
+  <!-- Add these back later, but temporarily comment out so we can debug our own javascript -->
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/display.js" ></script>
+  <script type="text/javascript">
+    function actionsUponLoading(event){
+      fillYearDropdown(month_in_view.getFullYear(), 5);
+      fillMonthDropdown(month_in_view.getMonth());
+      buildEmptyCalendar();
+      addEventWatchers();
+      refreshMonthCells();
+    }
+
+    document.addEventListener("DOMContentLoaded", actionsUponLoading, false);
+  </script>
+</body>
+</html>
