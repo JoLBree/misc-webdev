@@ -1,0 +1,42 @@
+sha2 hash length
+
+CREATE DATABASE corkboard;
+use corkboard;
+
+CREATE user 'androidcorkboard'@'localhost' identified BY 'hackathonsareawesome';
+GRANT SELECT,INSERT,UPDATE,DELETE on corkboard.* to 'androidcorkboard'@'localhost';
+flush PRIVILEGES;
+
+CREATE TABLE users (
+	user_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	username VARCHAR(64) NOT NULL,
+	crypted_password CHAR(64) NOT NULL,
+	PRIMARY KEY (user_id),
+	UNIQUE key username (username)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+	
+CREATE TABLE events (
+	event_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	user_id SMALLINT UNSIGNED NOT NULL,
+	flyer MEDIUMBLOB,
+	dateAndTime DATETIME,
+	PRIMARY KEY (event_id),
+	FOREIGN key (user_id) REFERENCES users (user_id)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+CREATE TABLE tags (
+	tag_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	event_id SMALLINT UNSIGNED NOT NULL,
+	tag VARCHAR(25) NOT NULL,
+	PRIMARY KEY (tag_id),
+	FOREIGN key (event_id) REFERENCES events (event_id)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+
+SELECT
+	flyer,
+	dateAndTime,
+	title	
+FROM events
+WHERE
+	dateAndTime BETWEEN NOW() AND (DATE_ADD(NOW(), INTERVAL 1 WEEK));
