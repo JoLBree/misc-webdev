@@ -52,6 +52,11 @@ function fillMonthDropdown(month){
 }
 
 function addDropdownWatchers(){
+  $(".color-dropdown li a").click(function(){
+    $(".btn .selected-option.color").text($(this).text());
+    $(".btn .selected-option.color").val($(this).text());
+  });
+
   $(".year-dropdown li a").click(function(){
     $(".btn .selected-option.year").text($(this).text());
     $(".btn .selected-option.year").val($(this).text());
@@ -169,9 +174,12 @@ function getEvents(){
   for (var i = 0; i < 42; i++){
     $("#"+i+" > table")[0].textContent = "";
   }
+  if ( $("#get_holiday").hasClass("unclickable") ) {
+        getHoliday(event);
+    }
   var xmlHttp = new XMLHttpRequest(); // Initialize our XMLHttpRequest instance
   // send month_in_view stuff
-  var token = "testToken";
+  var token = readCookie("token");
   xmlHttp.open("POST", "~/../php/getEvents.php", true); // Starting a POST request (NEVER send passwords as GET variables!!!)
   xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded"); // It's easy to forget this line for POST requests
   xmlHttp.addEventListener("load", getEventsCallback, false); // Bind the callback to the load event
@@ -281,5 +289,9 @@ function doUponLoading(event){
   refreshMonthCells();
   addSignupAndTagWatchers();
   loginCheck();
+  addEvent();
+  editEvent();
+  deleteEvent();
+  displayHoliday();
 }
 
