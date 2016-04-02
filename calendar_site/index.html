@@ -7,28 +7,84 @@
   <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <title>Calendar</title>
   <!-- Bootstrap -->
+  <link href='https://fonts.googleapis.com/css?family=Raleway:500' rel='stylesheet' type='text/css'>
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/calendar-style.css" rel="stylesheet">
-
 </head>
 <body>
-  <h1>Calendar</h1>
-  <section>
-    <div class="btn-group">
-      <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <span class="selected-option year">Select Year</span> <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu year-dropdown">
-        <!-- Javascript populates years here -->
-      </ul>
+  <section>  
+
+    <!-- For create user modal. Modals should be placed at a top-level position in code -->
+    <div class="modal fade bs-example-modal-sm" id = "create-user-modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Sign Up</h4>
+          </div>
+          <div class="modal-body form-group">
+            <input type="text" id="new_username" placeholder="Username" class ="form-control" />
+            <input type="password" id="new_password" placeholder="Password" class ="form-control"/>
+            <button id="create_btn" class ="btn btn-default">Create Account</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="btn-group">
-      <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <span class="selected-option month">Select Month</span> <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu month-dropdown">
-        <!-- Javascript populates months here -->
-      </ul>
+
+    <div class="row">
+      <div class="col-sm-4 form-group form-inline" id = "user_management">
+        <!-- For login/logout/signup. Do not make this a form. It will fuck up the modal show. -->
+      </div>
+      <div class="col-sm-4 navigation">
+        <h1>Calendar</h1>
+        <span class="prev-month">
+        <span class="glyphicon glyphicon-chevron-left move" aria-hidden="true"></span>
+        </span>
+        <div class="btn-group">
+          <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="selected-option year" id = "gyear">Select Year</span> <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu year-dropdown">
+            <!-- Javascript populates years here -->
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="selected-option month" id = "gmonth" >Select Month</span> <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu month-dropdown">
+            <!-- Javascript populates months here -->
+          </ul>
+        </div>
+        <span class="next-month">
+        <span class="glyphicon glyphicon-chevron-right move" aria-hidden="true"></span>
+        </span>
+      </div>
+      <div class="col-sm-4">
+        <!-- For selecting/filtering by tag colors -->
+        <form id="color_selectors">
+        <label>
+          <input type="checkbox" name="color" value="yellow" />
+          <img src="img/yellow.jpg" class="color_selector" alt="">
+        </label>
+        <label>
+          <input type="checkbox" name="color" value="red" />
+          <img src="img/red.jpg" class="color_selector" alt="">
+        </label>
+        <label>
+          <input type="checkbox" name="color" value="purple" />
+          <img src="img/purple.jpg" class="color_selector" alt="">
+        </label>
+        <label>
+          <input type="checkbox" name="color" value="blue" />
+          <img src="img/blue.jpg" class="color_selector" alt="">
+        </label>
+        <label>
+          <input type="checkbox" name="color" value="green" />
+          <img src="img/green.jpg" class="color_selector" alt="">
+        </label>
+        </form>
+      </div>
     </div>
   </section>
   <section>
@@ -39,27 +95,145 @@
 
     </div>
   </section>
+  <section>
+    <div class="row">
+      <div class="col-sm-5 event_details">
+        <!-- Javascript populates info in these three sub-divs -->
+        <div class="col-xs-6 event_time"><h3></h3></div>
+        <div class="col-xs-6 event_title"><h3></h3></div>
+        <div class="col-xs-12 event_description">
+          <h3></h3>
+          <p class = "description_para"></p>
+        </div>
+      </div>
+    </div>
+         <button id="get_holiday" class="btn btn-primary btn-lg holi">Holidays this Month</button>
+
+      <!-- Button trigger modal -->
+      <button type="button" class="btn btn-primary btn-lg ho" data-toggle="modal" data-target="#add-event-modal"> Add Event </button>
+    <div class="col-sm-2 event_details">
+      <!-- can insert buttons for add/edit/delete here -->
+      <!--Add Event  Modal -->
+      <div class="modal fade" id="add-event-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" >Add a New Event</h4>
+            </div>
+            <div class="modal-body">
+              <form>
+                <div class="form-group">
+                  <label class="control-label">Event Title:</label>
+                  <input type="text" class="form-control" id="new_title">
+                </div>
+                <div class="form-group">
+                  <label class="control-label">Event Date:</label>
+                  <input type='text' class="form-control show_date" id='datetimepicker2' />
+                </div>
+                <div class="form-group">
+                  <label class="control-label">Event Description:</label>
+                  <textarea class="form-control" id="new_description"></textarea>
+                </div>
+          <div class="btn-group">
+            <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="selected-option color" id = "new_color">Select a Tag</span> <span class="caret"></span>
+            </button>
+          <ul class="dropdown-menu color-dropdown">
+            <!-- Javascript populates months here -->
+          <li><a>yellow</a></li>
+          <li><a>red</a></li>
+          <li><a>green</a></li>
+          <li><a>blue</a></li>
+          <li><a>purple</a></li>
+          </ul>
+          </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id = "event_add">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
 
+    </div>
+    <div class="col-sm-5 event_details">
+      <!-- can insert form for adding/editing an event here -->
+
+            <!-- Show Event  Modal -->
+      <div class="modal fade" id="show-event-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" id="myModalLabel"> Event</h4>
+            </div>
+            <div class="modal-body">
+              <form>
+                <div class="form-group">
+                  <label class="control-label">Event Title:</label>                  
+                  <div id = "display_title"></div>
+                  <input type="text" class="form-control" id="show_title">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Event Date:</label>               
+                    <input type='text' class="form-control show_date" id='datetimepicker1' />
+                </div>
+                <div class="form-group">
+                  <label  class="control-label">Event Description:</label>
+                  <div id = "display_description"></div>
+                  <textarea class="form-control" id="show_description"></textarea>
+                </div>
+                <div id = "show_id" style = "display: none"></div>
+
+          <div class="btn-group">
+            <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="selected-option color" id = "show_color">Select a Tag</span> <span class="caret"></span>
+            </button>
+          <ul class="dropdown-menu color-dropdown">
+            <!-- Javascript populates months here -->
+          <li><a>yellow</a></li>
+          <li><a>red</a></li>
+          <li><a>green</a></li>
+          <li><a>blue</a></li>
+          <li><a>purple</a></li>
+          </ul>
+          </div>
+
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id = "event_delete">Delete</button>
+              <button type="button" class="btn btn-primary" id = "event_edit">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
 
 
-
-  <!-- Add these back later, but temporarily comment out so we can debug our own javascript -->
   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/moment.js" ></script>
+  <script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
   <script type="text/javascript" src="js/display.js" ></script>
-  <script type="text/javascript">
-    function actionsUponLoading(event){
-      fillYearDropdown(month_in_view.getFullYear(), 5);
-      fillMonthDropdown(month_in_view.getMonth());
-      buildEmptyCalendar();
-      addEventWatchers();
-      refreshMonthCells();
-    }
+  <script type="text/javascript" src="js/login.js" ></script>
+  <script type="text/javascript" src="js/forDylan.js" ></script>
 
-    document.addEventListener("DOMContentLoaded", actionsUponLoading, false);
+  <script type="text/javascript">
+  // things to do last. In our javascript includes, write all the functions. Execute code here.
+  document.addEventListener("DOMContentLoaded", doUponLoading, false);
+  $('#datetimepicker1').datetimepicker();
+  $('#datetimepicker2').datetimepicker();
   </script>
+  <!-- can include another javascript script here -->
 </body>
 </html>

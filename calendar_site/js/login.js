@@ -17,8 +17,7 @@ function addSignupAndTagWatchers(){
 function signup(){
   var username = document.getElementById("new_username").value;
   var password = document.getElementById("new_password").value;
-  var token = "testToken";
-  var dataString = "new_username=" + encodeURIComponent(username) + "&new_password=" + encodeURIComponent(password)+ "&token=" + encodeURIComponent(token);
+  var dataString = "new_username=" + encodeURIComponent(username) + "&new_password=" + encodeURIComponent(password);
   var xmlHttp = new XMLHttpRequest();
   xmlHttp.open("POST", "~/../php/signup.php", true);
   xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -38,14 +37,13 @@ function signup(){
 }
 
 function loginCheck(){
- var token = "testToken";
- var dataString = "token=" + encodeURIComponent(token);
  var xmlHttp = new XMLHttpRequest();
  xmlHttp.open("POST", "~/../php/logincheck.php", true);
  xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
  xmlHttp.addEventListener("load", function(event){
   var jsonData = JSON.parse(event.target.responseText);
   if(jsonData.loggedin == true){ 
+    createCookie("token", jsonData.token, 1);
     refreshUserButtons(jsonData.loggedin);
     getEvents();
     $(".color_selector").show();
@@ -61,14 +59,14 @@ function loginCheck(){
 function login(event){
   var username = document.getElementById("username").value;
   var password = document.getElementById("password").value;
-  var token = "testToken";
-  var dataString = "username=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password)+ "&token=" + encodeURIComponent(token);
+  var dataString = "username=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password);
   var xmlHttp = new XMLHttpRequest();
   xmlHttp.open("POST", "~/../php/login.php", true);
   xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xmlHttp.addEventListener("load", function(event){
     var jsonData = JSON.parse(event.target.responseText);
     if(jsonData.success){
+      createCookie("token", jsonData.token, 1);
       getEvents();
       refreshUserButtons(true);
       $(".color_selector").show();
@@ -81,7 +79,7 @@ function login(event){
 }
 
 function logout(event){
-  var token = "testToken";
+  var token = readCookie("token");
   var dataString = "token=" + encodeURIComponent(token);
   var xmlHttp = new XMLHttpRequest();
   xmlHttp.open("POST", "~/../php/logout.php", true); 
@@ -92,11 +90,15 @@ function logout(event){
       refreshUserButtons(false);
       getEvents();
       $(".color_selector").hide();
-    }else{
+      eraseCookie("token");
+    }else if (jsonData.success == "done"){
+      alert(jsonData.message);      
+      refreshUserButtons(false);
+     }else{
       alert(jsonData);
-      alert("You were not logged out.");
-      refreshUserButtons(true);
-    }
+       alert("You were not logged out.");
+       refreshUserButtons(true);
+     }
   }, false);
   xmlHttp.send(dataString);
   // erase cookie

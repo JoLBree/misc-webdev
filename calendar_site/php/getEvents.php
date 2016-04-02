@@ -6,6 +6,7 @@ header("Content-Type: application/json");
 if ($loggedin && isset($_POST['year']) && isset($_POST['month']) && isset($_POST['date']) && isset($_SESSION['user_id']) ){
 	require 'csrfcheck.php';
 	$date = $_POST['year']."-".$_POST['month']."-".$_POST['date']." 00:00:00";
+	// $date = $_POST['month']."/".$_POST['date']."/".$_POST['year']." 00:00:00";
 
 	$stmt = $mysqli->prepare("SELECT event_id, title, body, tag, datetime 
 		from events 
