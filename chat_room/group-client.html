@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+	<title>Chatroom</title>
+	<!-- css -->
+	<link href='https://fonts.googleapis.com/css?family=Raleway:500' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+	<link href="css/chat-style.css" rel="stylesheet">
+	<style type="text/css">
+		body {
+			padding: 10px 15px;
+			text-align: center;
+		}
+	.custom-menu {
+	    display: none;
+	    z-index: 1000;
+	    position: absolute;
+	    overflow: hidden;
+	    border: 1px solid #CCC;
+	    white-space: nowrap;
+	    font-family: sans-serif;
+	    background: #FFF;
+	    color: #333;
+	    border-radius: 5px;
+	    padding: 0;
+	}
+
+	/* Each of the items in the list */
+	.custom-menu li {
+	    padding: 8px 12px;
+	    cursor: pointer;
+	    list-style-type: none;
+	    transition: all .3s ease;
+	}
+
+	.custom-menu li:hover {
+	    background-color: #DEF;
+	}
+
+	</style>
+	<!-- bootstrap javascript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> <!-- must be included before bootstrap.min.js -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+	<script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+	<div class="row " >
+		<h3 class="text-center" >Chat room website! </h3>
+		<br /><br />
+		<div class="col-xs-2">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					Current users
+				</div>
+				<ul class="list-group current_users"> <!-- panel of users -->
+				</ul>
+			</div>
+		</div>
+		<div class="col-xs-8">
+			<ul class="nav nav-tabs"></ul>
+			<div class="tab-content">				
+			</div>
+			<div class="panel-footer">
+				<div class="input-group">
+					<input type="text" class="form-control" id = "message_value" placeholder="Enter Message" />
+					<span class="input-group-btn">
+						<button class="btn btn-info" id = "send" type="button">SEND</button>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div class="col-xs-2 ">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					Available Rooms
+				</div>
+				<ul class="list-group chatrooms" >
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="row " >
+		<div class="col-xs-2"></div>
+		<div class="input-group col-xs-6">
+		<div class="input-group col-xs-6">
+			<input type="text" class="form-control" id = "room_name" placeholder="Create public room" />
+			<span class="input-group-btn">
+				<button class="btn btn-info" id = "makeRoom" type="button">Create</button>
+			</span>
+		</div>
+		<div class="input-group col-xs-6">			
+			<input type="text" class="form-control" id = "p_room_name" placeholder="Create private room" />
+			<span class="input-group-btn">
+				<button class="btn btn-info" id = "makePRoom" type="button">Create</button>
+			</span>
+		</div>
+		<div class="input-group col-xs-6">
+			<input type="text" class="form-control" id = "user_to_ban" placeholder="Nickname" />
+				<span class="input-group-btn">
+					<button class="btn btn-info" id = "kickUser" type="button">Kick</button>
+				</span>
+				<span class="input-group-btn">
+					<button class="btn btn-info" id = "banUser" type="button">Ban</button>
+				</span>
+		</div>
+		</div>
+	</div>
+
+	<ul class='custom-menu'>
+  		<li data-action="ban">Farewell</li>
+  		<li data-action="kick">Get out</li>
+	</ul>
+	<!-- <script type="text/javascript" src="jQuery/display.js"></script> -->
+	<script type="text/javascript">
+		// globals
+		var socketio = io.connect();
+		rooms = []; // make sure to push to this array whenever a room is made
+		online_users = []; 
+		var max_room_id = 0; // increments every time a room is created
+		var nickname;
+
+		function formatAMPM(date) { // from the same stackoverflow post we referenced in module 5
+		  // prints time of date as eg 5:00pm
+		  var hours = date.getHours();
+		  var minutes = date.getMinutes();
+		  var ampm = hours >= 12 ? 'pm' : 'am';
+		  hours = hours % 12;
+		  hours = hours ? hours : 12; // the hour '0' should be '12'
+		  minutes = minutes < 10 ? '0'+minutes : minutes;
+		  var strTime = hours + ':' + minutes + ampm;
+		  return strTime;
+		}
+
+		function makeRoomButton(name, id){
+			var roomButton = document.createElement("button"); // whenever a room is created, add a button for it
+			$('.chatrooms').append($(roomButton).attr({
+				class : "list-group-item",
+				value : name,
+			id : id,  // id of the room, used to identify tab and tab content
+			href :"#room_"+id,
+			'data-toggle' : "tab"
+		}).text(name)); 
+		}
+
+		function Room(name, creator, id) { // base room constructor
+			for (var i = 0; i < rooms.length; i++){
+				if (rooms[i].name == name){ // no duplicate names allowed
+					return rooms[i];
+				}
+			}
+			this.name = name
+			this.creator = creator;
+			this.users = [];
+			
+			if (!(id === undefined)){
+				this.id = id;
+				if (id > max_room_id){
+					max_room_id = id;
+				}
+			}else{
+				this.id = max_room_id;
+				max_room_id++; // auto increment the id
+			}
+			makeRoomButton(this.name, this.id);
+
+		}
+
+		Room.prototype = {
+			constructor: Room, // assign/(override?) constructor
+			addUser:function (user_to_add)  { // methods. Add user to the users array in a room
+				this.users.push(user_to_add);
+				// console.log(user_to_add+" added");
+				var userButton = document.createElement("button");
+			},
+			removeUser:function (user_to_remove)  { // Remove user from the users array in a room
+				var index = this.users.indexOf(user_to_remove); 
+				if (index > -1) {
+					this.users.splice(index, 1);
+					// console.log(user_to_remove+" removed");
+					if (this.users.length == 0){
+						// console.log("no more users in room");
+					}
+				}
+			}
+		}
+
+		function PrivateRoom (name, creator, id, password, blacklist) {
+			Room.call(this, name, creator, id); // use the code from function Room
+			this.password = password; // also set a password
+			if (typeof blacklist === 'undefined'){ // initialize empty blacklist if not specified
+				this.blacklist = [];
+			}else{
+				this.blacklist = blacklist; // else initialize blacklist
+			}	
+		}
+		var tmp = function(){}; // so that it doesn't copy the Room constructor. Refer to the second-best answer here: http://stackoverflow.com/questions/4152931/javascript-inheritance-call-super-constructor-or-use-prototype-chain
+		tmp.prototype = Room.prototype;
+		PrivateRoom.prototype = new tmp(); // inherit the prototypes and a blank constructor.
+		PrivateRoom.prototype.constructor = PrivateRoom; //override constructor
+		PrivateRoom.prototype.banUser = function (user_to_ban){ // add user to blacklist of a room
+			this.blacklist.push(user_to_ban);
+			// console.log(user_to_ban+" banned");
+		}	
+
+		function twoPersonRoom(creator, friend, id) { // base room constructor
+			for (var i = 0; i < rooms.length; i++){
+				if ((rooms[i].name == creator && rooms[i].creator == friend) || (rooms[i].name == friend && rooms[i].creator == creator)){
+					return rooms[i];
+				}
+			}
+			this.name = friend;
+			this.creator = creator;
+			this.users = [];
+			this.id = max_room_id;
+			max_room_id++; // auto increment the id
+			var roomButton = document.createElement("button"); // whenever a room is created, add a button for it
+		}
+
+		function displayUsers(current_room){
+			// check if active exists
+			if ($('ul.nav-tabs li.active').length){
+				var room_id = $('ul.nav-tabs li.active').attr("id").slice(4);
+			 	if (room_id == current_room.id){
+			 		console.log("hiDYLN");
+					$('.current_users').empty();
+				// need to remove the current user first; then add 
+				users = current_room.users;
+				for (var i = users.length - 1; i >= 0; i--) {
+					if(users[i]!=''){
+						var userButton = document.createElement("button"); // whenever a room is created, add a button for it
+					$('.current_users').append($(userButton).attr({
+						class : "list-group-item",
+						value : users[i],
+						// id : users[i],  // id of the room, used to identify tab and tab content
+						// href :"#room_"+this.id,
+						'data-toggle' : "tab"
+					}).text(users[i]));
+					}	
+				}
+			 	}
+			}
+			
+
+
+		}
+
+
+		function displayOnlineUsers(){
+			$('.current_users').empty();
+			// need to remove the current user first; then add 
+			users = online_users;
+			for (var i = users.length - 1; i >= 0; i--) {	
+				var userButton = document.createElement("button"); // whenever a room is created, add a button for it
+				$('.current_users').append($(userButton).attr({
+					class : "list-group-item",
+					value : users[i],
+					// id : users[i],  // id of the room, used to identify tab and tab content
+					// href :"#room_"+this.id,
+					'data-toggle' : "tab"
+				}).text(users[i]));
+			};
+		}
+
+		function showRoom(room_id){
+			$('ul.nav-tabs li.active').removeClass('active');
+			$('#tab_'+room_id).addClass('active'); // Why is this not working???
+			$('#tab_'+room_id).tab('show');
+			$('.tab-content .tab-pane.active').removeClass('active');
+			$('#room_'+room_id).addClass('active'); 
+			displayUsers(rooms[room_id]);
+		}
+
+		function createRoomAndTab(id, name){
+			// console.log("blacklist info cmg up");
+			// console.log(rooms[id]);
+			if (rooms[id] instanceof PrivateRoom && rooms[id].blacklist.indexOf(nickname) > -1){ // if not on the blacklist
+				alert("You have been banned from this room");
+			}
+			else{
+				if ($('#tab_'+id).length == 0){ // if tab doesn't already exist
+					var roomTab = $("<li>").attr('id','tab_'+id).append(// make and display new tab
+						$("<a>").attr({
+							href :"#room_"+id,
+							'data-toggle' : "tab"
+						}).text(name).append("<button class='close closeTab' type='button' >×</button>")
+						);
+					// moved this from the room constructor to here
+					$('.nav-tabs').append(roomTab);
+					var chat_space = document.createElement("div");
+					var chat_list_group = document.createElement("ul");
+					$(chat_space).append($(chat_list_group).attr({
+						class : "list-group"
+					}));
+					$('.tab-content').append($(chat_space).attr({
+						class : "tab-pane pre-scrollable",
+						id :"room_"+id,
+					})); 
+					if (!(rooms[id] instanceof twoPersonRoom)){
+						// console.log("trying to add user, id is "+id);
+						rooms[id].addUser(nickname);
+					}
+					// 				
+					socketio.emit("user_joined_room_to_server", {
+						user:nickname,
+						room:id
+					});
+				}
+				showRoom(id);
+			}
+		}
+
+		// Detect if tabs or buttons are clicked, if so show their content
+		function addButtonTabListeners(){
+			$(".chatrooms").on("click", "button", function(event){
+				event.preventDefault();
+				var id = $(this).attr("id");
+				if (rooms[id] instanceof PrivateRoom){
+					var pw = prompt("Enter Password");
+					if (pw == rooms[id].password){
+						createRoomAndTab(id, $(this).attr("value"));
+					}
+					else{
+						alert("Wrong Password");
+					}
+				}
+				else{
+					createRoomAndTab(id, $(this).attr("value"));
+				}
+				
+			});
+
+			$(".current_users").on("click", "button", function(event){
+				event.preventDefault();
+				if ($(this).attr("value") != nickname){ // if user is not yourself
+					socketio.emit("new_2person_room_to_server", {
+						creator:nickname,
+						room_name:$(this).attr("value")
+					});
+				}
+			});
+
+			$(".current_users").mousedown(function(event){
+				if(event.which ==3){
+					rightclick();
+				}
+			});
+
+			$(".nav-tabs").on("click", "button", function(event){
+				var tabContentId = $(this).parent().attr("href");
+		        $(this).parent().parent().remove(); //remove li of tab
+		        // $('.nav-tabs a:last').tab('show'); // Select first tab
+		        $(tabContentId).remove(); //remove respective tab content
+		        socketio.emit("user_leave_to_server", {
+					user:nickname,
+					room:tabContentId.slice(6)
+				});
+		    });
+
+			$(".nav-tabs").on("click", "a", function(event){
+				event.preventDefault();
+				var id = $(this).attr("href").slice(6);
+				// $(this).tab('show');
+				displayUsers(rooms[id]);
+			});
+			
+			$("#send").on("click", function(event){
+				var msg = $("#message_value").val();
+				var room_id = $('ul.nav-tabs li.active a').attr("href").slice(6);
+				socketio.emit("message_to_server", {
+					message:msg,
+					sender:nickname,
+					room:room_id
+				});
+				$('#message_value').val('');
+				// $('#message_value').text('');
+			});
+
+			$('#message_value').keyup(function (e) {
+			    if (e.keyCode == 13) {
+			        var msg = $("#message_value").val();
+					var room_id = $('ul.nav-tabs li.active a').attr("href").slice(6);
+					socketio.emit("message_to_server", {
+						message:msg,
+						sender:nickname,
+						room:room_id
+					});
+					$('#message_value').val('');
+			    }
+			});
+
+			$("#makeRoom").on("click", function(event){
+				var room_name = $("#room_name").val();
+				if(room_name == ''){
+					alert("Please enter chatroom name");
+				}
+				else{
+					socketio.emit("new_room_to_server", {
+					creator:nickname,
+					room_name:room_name
+				});
+				$('#room_name').val('');
+				}
+			
+			});
+
+			$("#makePRoom").on("click", function(event){
+				var pw = prompt("Enter Password for this privateroom");
+				while (pw==null){
+					pw = prompt("Enter Password for this privateroom");
+				}
+				var room_name = $("#p_room_name").val();
+				if(room_name == ''){
+					alert("Please enter chatroom name");
+				}
+				else{
+					socketio.emit("new_private_room_to_server", {
+					creator:nickname,
+					room_name:room_name,
+					password:pw
+				});
+				$('#p_room_name').val('');
+				}
+			});
+
+			$("#kickUser").on("click", function(event){
+				// console.log("kicking");
+				var user_name = $("#user_to_ban").val();
+				var room_id = $('ul.nav-tabs li.active').attr("id").slice(4);
+				if(user_name == ''){
+					alert("Please enter a nickname");
+				} else if(!rooms[room_id] instanceof PrivateRoom || rooms[room_id].creator != nickname){
+					alert("You can only kick someone from a private room you created!")
+				}
+				else{
+					// console.log("emitting");
+					socketio.emit("kick_from_room_to_server", {
+					room:room_id,
+					user_to_kick:user_name,
+					user_performing_action:nickname
+				});
+				$('#user_to_ban').val('');
+				}			
+			});
+
+			$("#banUser").on("click", function(event){
+				// console.log("banning");
+				var user_name = $("#user_to_ban").val();
+				var room_id = $('ul.nav-tabs li.active').attr("id").slice(4);
+				if(user_name == ''){
+					alert("Please enter a nickname");
+				} else if(!rooms[room_id] instanceof PrivateRoom || rooms[room_id].creator != nickname){
+					alert("You can only ban someone from a private room you created!")
+				}
+				else{
+					// console.log("emitting ban");
+					socketio.emit("ban_from_room_to_server", {
+					room:room_id,
+					user_to_ban:user_name,
+					user_performing_action:nickname
+				});
+				$('#user_to_ban').val('');
+				}			
+			});
+
+		}
+
+		function addMessage(room_id, user, message, time){
+			// call this in the socket.io stuff
+			$('#room_'+room_id+' .list-group').append(
+				$("<li>").attr('class', 'list-group-item').append(
+					$("<span>").attr('class', 'message').text(message),
+					$("<br>"),
+					$("<small>").attr('class', "text-muted").text(user+" at "+time)
+					));
+		}
+		
+		function askForUsername(){
+			var temp = '';
+			// alert($.inArray(temp, online_users )==-1);
+			if(online_users.indexOf(temp)!=-1){
+			temp = prompt("Pick a nickname ");
+			while(online_users.indexOf(temp)!=-1 || temp == null){
+			temp = prompt("Nickname exists. Pick another nickname");
+			}		
+
+			}
+			nickname = temp;
+			socketio.emit("user_signup_to_server", {
+					user:nickname
+				});
+			//displayOnlineUsers();
+		}
+
+		function allTheSocketListerners(){
+
+			socketio.on("user_signup_to_client",function(data) {
+					online_users = data;
+			     });
+
+			socketio.on("message_to_client",function(data) {
+				var time = formatAMPM(new Date(data['time']));
+				addMessage(data['room'], data['sender'], data['message'], time);
+			         // Hardcoded room at the moment. Would 
+			     });
+
+			socketio.on("user_joined_room_to_client",function(data) {
+				if (!(rooms[data["room"]] instanceof twoPersonRoom) && (data['user'] != nickname)){ // and the user is not you
+					// console.log(rooms);
+					// console.log("trying to add user, id is "+data["room"]+", room is "+rooms[data["room"]]);
+					rooms[data["room"]].addUser(data['user']);
+					displayUsers(rooms[data["room"]]);
+				}
+			});
+
+			socketio.on("send_all_rooms",function(data) {
+				// console.log("getting all rooms");
+				// console.log(data);
+				for (var i = 0; i < data.length; i++){ // Then run this, cos atm trigger through the constructor.
+					if (data[i].type == "room"){
+						rooms[data[i].id] = (new Room(data[i].name, data[i].creator, data[i].id));
+					}else if (data[i].type == "privateRoom"){
+						rooms[data[i].id] = (new PrivateRoom(data[i].name, data[i].creator, data[i].id, data[i].password));
+					}else if (data[i].type == "twoPersonRoom"){
+						rooms[data[i].id] = (new twoPersonRoom(data[i].name, data[i].creator, data[i].id));
+					}
+					rooms[i].removeUser("theCreator");
+				}
+				// console.log(rooms);
+			});
+
+			socketio.on("new_room_to_client",function(data) {
+				// Need to make the data into a room object, then push to rooms array
+					rooms[data.id] = new Room(data.name, data.creator, data.id);
+			});
+			socketio.on("new_private_room_to_client",function(data) {
+					rooms[data.id] = new PrivateRoom(data.name, data.creator, data.id, data.password, data.blacklist);
+			});
+
+
+			socketio.on("new_2person_room_to_client",function(data) {
+					rooms[data.id] = new twoPersonRoom(data.name, data.creator, data.id); // if not involved, that index does not exist (no data at that index)
+					if (data.name == nickname){
+					createRoomAndTab(data.id, data.creator); // this should be split, show tab in own client, create tab in that target person's
+					} else if (data.creator == nickname){
+						createRoomAndTab(data.id, data.name);
+					}
+			
+			});
+
+			socketio.on("kick_from_room_to_client",function(data) {
+				rooms[data['room']].removeUser(data['user']);
+				if (nickname == data['user']){
+					var tab_content = '#room_'+data['room'];
+					var tab = "#tab_"+data['room'];
+					$(tab).remove();
+					$(tab_content).remove();
+					alert("You have been kicked from "+rooms[data['room']].name);
+					$('.nav-tabs a:last').tab('show'); // Select first tab
+					// call display users again
+					displayUsers(rooms[data['room']]);
+				}
+				// call display users again
+				displayUsers(rooms[data['room']]);
+			});
+			socketio.on("ban_from_room_to_client",function(data) {
+				rooms[data['room']].removeUser(data['user']);
+				rooms[data['room']].banUser(data['user']);
+				if (nickname == data['user']){
+					var tab_content = '#room_'+data['room'];
+					var tab = "#tab_"+data['room'];
+					$(tab).remove();
+					$(tab_content).remove();
+					alert("You have been banned from "+rooms[data['room']].name);
+					$('.nav-tabs a:last').tab('show'); // Select first tab
+					displayUsers(rooms[data['room']]);
+				}
+				displayUsers(rooms[data['room']]);
+			});
+			
+			socketio.on("cannot_join",function(data) {
+				alert("You have been banned from this room");
+			});
+			
+			socketio.on("user_leave_to_client",function(data) {
+				rooms[data['room']].removeUser(data['user']);
+				displayUsers(rooms[data['room']]);
+			});
+			
+
+		}
+
+		function rightclick(){
+		// JAVASCRIPT (jQuery)
+			   console.log(" when clicked");
+
+			// Trigger action when the contexmenu is about to be shown
+			$(document).bind("contextmenu", function (event) {
+			    // Avoid the real one
+			    event.preventDefault();
+			    // Show contextmenu
+			    $(".custom-menu").finish().toggle(100).
+			    // In the right position (the mouse)
+			    css({
+			        top: event.pageY + "px",
+			        left: event.pageX + "px"
+			    });
+			});
+			// If the document is clicked somewhere
+			$(document).bind("mousedown", function (e) {
+			    // If the clicked element is not the menu
+			    if (!$(e.target).parents(".custom-menu").length > 0) {
+			        // Hide it
+			        $(".custom-menu").hide(100);
+			        // $(document).unbind("contextmenu");
+			    }
+			});
+
+			// If the menu element is clicked
+			$(".custom-menu li").click(function(){
+			    // This is the triggered action name
+			    switch($(this).attr("data-action")) {
+			        // A case for each action. Your actions here
+			        case "ban": alert("ban"); break;
+			        case "kick": alert("kick"); break;
+			    }
+			   	$(document).unbind("contextmenu");
+			    // Hide it AFTER the action was triggered
+			    $(".custom-menu").hide(100);
+			  });
+		}
+
+
+
+			function doUponLoading(event){
+				addButtonTabListeners();
+				allTheSocketListerners();
+				setTimeout(askForUsername, 300);
+		}
+
+		// things to do last. In our javascript includes, write all the functions. Execute code here.
+		document.addEventListener("DOMContentLoaded", doUponLoading, false);
+	</script>
+</body>
+</html>

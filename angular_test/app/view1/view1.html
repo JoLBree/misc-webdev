@@ -1,0 +1,18 @@
+<form class="form-inline">
+<label>Search:</label> <input class="form-control" ng-model="query">
+</form>
+</br>
+<table class="table">
+	<tr>
+		<th>Reviews:</th>
+		<th>Brand:</th>
+		<th>Name:</th>
+		<th>Country:</th>
+	</tr>
+	<tr ng-repeat = "coffee in coffees | filter:query | orderBy:orderProp">
+		<td><a href="#/view2/{{coffee.id}}">Reviews</a></td>
+		<td>{{coffee.brand}}</td>
+		<td>{{coffee.name}}</td>
+		<td>{{coffee.country}}</td>
+	</tr>
+</table>
