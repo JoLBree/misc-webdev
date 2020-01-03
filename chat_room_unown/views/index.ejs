@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<head>
+  <title>Unown</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.10/angular-ui-router.js"></script>
+  <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"> 
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="javascripts/angularApp.js"></script>
+  <script src="javascripts/ui-bootstrap-tpls-1.0.2.min.js"></script>
+  <link rel="stylesheet" href="angularApp.css">
+</head>
+<body ng-app="myApp"> 
+
+  <nav class="navbar navbar-default" ng-controller="NavCtrl">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav">
+        <li>
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#/home">
+              <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+            </a>
+          </div>
+          <h1 id = "title">To Know the Unown</h1>
+        </li>
+        <li ng-show="isLoggedIn()"><a>Welcome, {{ currentUser() }}</a></li>
+        <li ng-show="isLoggedIn()"><a href="" ng-click="logOut()">Log Out</a></li>
+        <li ng-hide="isLoggedIn()"><a href="/#/login">Log In</a></li>
+        <li ng-hide="isLoggedIn()"><a href="/#/register">Register</a></li>
+      </ul>
+    </div>
+  </nav>
+  <div class="row">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-10">
+      <ui-view></ui-view>
+    </div>
+    <div class="col-sm-1"></div>
+  </div>
+</br>
+</br>
+<section class = "section-header">
+</section>
+</body>
+</html>
+
+<!-- START HOME TEMPLATE -->
+<script type="text/ng-template" id="/home.html">
+  <div class = "row">
+    <div class="col-xs-3">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <strong>{{currentUser()}}'s Profile</strong>
+        </div>
+        <div class="panel-body">
+          <form ng-submit="saveAvatar()">
+            <label>Change avatar:</label>
+            <br>
+            <div class="btn-group" uib-dropdown keyboard-nav>
+              <button id="simple-btn-keyboard-nav" type="button" class="btn btn-default" uib-dropdown-toggle><img class="avatar" ng-src="images/unown/{{selectedAvatar}}.png">
+               <span class="caret"></span>
+             </button>
+             <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="simple-btn-keyboard-nav">
+              <table class = "table table-borderless">
+                <tr ng-repeat="i in getRows() track by $index" ng-init="idx = $index">
+                  <td ng-repeat="c in getColumns() track by $index" ng-init="idy=$index"><button type="button" class="btn" ng-click="setAvatar(avatars[(idx*xWidth)+idy])"><img class="avatar" ng-src="images/unown/{{avatars[(idx*xWidth)+idy]}}.png"></img></button></td>
+                </tr>
+              </table>
+            </ul>
+          </div> 
+          <button type="submit"  class="btn btn-default" uib-dropdown-toggle>Save</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-6">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <form class="form-inline">
+          <strong>Previous conversations</strong>
+          <span class = "pull-right"><label>Search:</label> <input class="form-control short" ng-model="query"></span>
+        </form>
+      </div>
+      <table class="table">
+        <tr ng-repeat = "convo in convos | filter:query | orderBy:orderProp">
+          <td><a href="#/convo/{{convo._id}}"><span ng-repeat = "user in convo.users">{{user}}, </span></a></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div class="col-xs-3">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <strong>New conversation</strong>
+      </div>
+      <div class="panel-body">
+        <form class="form-inline" ng-submit="addConvo()">
+          <label>Add user:</label>
+          <br>
+          <div class="input-group">
+          <input type="text" class="form-control" ng-model="new_convo_user"></input>
+          <span class="input-group-btn">
+          <button type="submit" class="btn btn-default">Start</button>
+          </span>
+          </div>
+        </form>
+        <!-- <form class="form-inline">
+          <strong>Previous conversations:</strong>
+          <span class = "pull-right"><label>Search:</label> <input class="form-control" ng-model="query"></span>
+        </form> -->
+      </div>
+    </div>
+  </div>
+</div>
+</script>
+<!-- END HOME TEMPLATE -->
+
+<!-- START CONVO TEMPLATE -->
+<script type="text/ng-template" id="/convo.html">
+  <div class="row " >
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <div class="row">
+          <!-- <div class="col-xs-4"></div> -->
+          <div class="col-xs-8">
+            <h4 class="text-left" >Conversation with <span ng-repeat = "user in convo.users">{{user}}, </span></h4>
+          </div>
+          <!-- <div class="btn-group"> -->
+          <div class="col-xs-3">
+
+            <!-- <div class="panel-heading">
+              <form class="form-inline">
+                <strong>Previous conversations</strong>
+                <span class = "pull-right"><label>Search:</label> <input class="form-control" ng-model="query"></span>
+              </form>
+            </div> -->
+
+            <form ng-submit="addUser()" class = "form-inline">
+            <div class="input-group">
+              <input class="form-control pull-right" type="text" ng-model="new_user"></input>
+              <span class="input-group-btn">
+              <button type="submit" class="btn btn-default pull-right">Add user</button></h4>
+              </span>
+              </div>
+            </form>
+          </div>
+          <div class="col-xs-1">
+            <form ng-submit="leave()" >
+              <!-- <form ng-submit="getAvatars('hey')" class = "pull-right"> -->
+              <button type="submit" class="btn btn-default pull-right">Leave</button></h4>
+            </form>
+          </div>
+          <!-- </div> -->
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row " >
+      <div class="col-xs-2">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            Chatting with:
+            <!-- <img class="avatar" ng-src="images/unown/{{getAvatar('jo')}}.png"></img> -->
+          </div>
+          <ul class="list-group current_users">
+            <li class = "list-group-item" ng-repeat = "user in convo.users track by $index">
+              <img class="avatar" ng-src="images/unown/{{getAvatar(user)}}.png"></img>{{user}}
+              <!-- <img class="avatar" ng-src="images/unown/b.png"></img>{{user}} -->
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-xs-10">
+        <div class="panel panel-default">
+          <div class="panel-body pre-scrollable">
+            <span ng-repeat = "message in convo.messages track by $index">
+              <img ng-repeat = "char in message.content track by $index" class="char" ng-src="images/{{message.format}}/{{char|letters}}.png"></img>
+            </br>
+            <small class = "text-muted">{{message.author}} at {{formatAMPM(message.time)}}</small>
+            <hr>
+          </span>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <form ng-submit="addMsg()">
+          <div class="input-group">
+            <input type="text" class="form-control" id = "message_value" ng-model = "message_text" placeholder="Enter Message" />
+            <span class="input-group-btn">
+              <div class="btn-group" uib-dropdown>
+                <button id="simple-btn-keyboard-nav" type="button" class="btn btn-default" uib-dropdown-toggle>{{toString(selectedFormat)}}
+                  <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                  <li ng-repeat="format in formats" ng-click="setFormat(format)"><a>{{toString(format)}}</a></li>
+                </ul>
+              </div>
+              <button class="btn btn-info" id = "send" type="submit">SEND</button>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</script>
+<!-- END CONVO TEMPLATE -->
+
+<!-- START REGISTRATION TEMPLATE -->
+<script type="text/ng-template" id="/register.html">
+ <!--  <div class="page-header">
+    <h1>Flapper News</h1>
+  </div> -->
+
+  <div ng-show="error" class="alert alert-danger row">
+    <span>{{ error.message }}</span>
+  </div>
+
+  <form ng-submit="register()"
+  style="margin-top:30px;">
+  <h3>Register</h3>
+
+  <div class="form-group">
+    <input type="text" class="form-control" placeholder="Username" ng-model="user.username"></input>
+  </div>
+  <div class="form-group">
+    <input type="password" class="form-control" placeholder="Password" ng-model="user.password"></input>
+  </div>
+  <button type="submit" class="btn btn-primary">Register</button>
+</form>
+</script>
+<!-- END REGISTRATION TEMPLATE -->
+
+<!-- START LOGIN TEMPLATE -->
+<script type="text/ng-template" id="/login.html">
+  <div ng-show="error" class="alert alert-danger row">
+    <span>{{ error.message }}</span>
+  </div>
+
+  <form ng-submit="logIn()"
+  style="margin-top:30px;">
+  <h3>Log In</h3>
+
+  <div class="form-group">
+    <input type="text" class="form-control" placeholder="Username" ng-model="user.username"></input>
+  </div>
+  <div class="form-group">
+    <input type="password" class="form-control" placeholder="Password" ng-model="user.password"></input>
+  </div>
+  <button type="submit" class="btn btn-primary">Log In</button>
+</form>
+</script>
+<!-- END LOGIN TEMPLATE -->
